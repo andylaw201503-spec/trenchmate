@@ -5,6 +5,10 @@
   'use strict';
 
   const TWEET_ICON_SELECTOR = '[data-icon="IconTweet16pxRegular"]';
+  // X/Twitter account icon (shown when the token links to a profile rather than a
+  // specific tweet). Used as a fallback preview target when no tweet is present.
+  const X_ACCOUNT_ICON_SELECTOR = '[data-icon="IconOfficialx16pxRegular"]';
+  const TWEET_TRIGGER_SELECTOR = `${TWEET_ICON_SELECTOR}, ${X_ACCOUNT_ICON_SELECTOR}`;
   const POPUP_SELECTORS =
     '[class*="popup"], [class*="Popup"], [class*="popover"], [class*="Popover"], ' +
     '[class*="tooltip"], [class*="Tooltip"], [class*="preview"], [class*="Preview"], ' +
@@ -854,8 +858,8 @@
       for (const m of mutations) {
         for (const node of m.addedNodes) {
           if (node.nodeType !== 1) continue;
-          if (node.matches?.(TWEET_ICON_SELECTOR) ||
-              node.querySelector?.(TWEET_ICON_SELECTOR)) {
+          if (node.matches?.(TWEET_TRIGGER_SELECTOR) ||
+              node.querySelector?.(TWEET_TRIGGER_SELECTOR)) {
             foundNew = true; break;
           }
         }
@@ -883,7 +887,10 @@
 
     const epoch = pageEpoch;
 
-    const icons = Array.from(document.querySelectorAll(TWEET_ICON_SELECTOR));
+    let icons = Array.from(document.querySelectorAll(TWEET_ICON_SELECTOR));
+    // No tweet on this token page, but a Twitter/X account link may exist —
+    // hover its icon so GMGN shows the account preview card instead.
+    if (icons.length === 0) icons = collectXAccountIcons();
     if (icons.length === 0) return;
 
     const newIcons = icons.filter((el) => !processedSet.has(el));
@@ -901,6 +908,24 @@
         processedSet.delete(icon);
       }
     }
+  }
+
+  /** Account icons whose enclosing anchor is a real X/Twitter profile link
+   *  (rank 2), excluding search and site-navigation links. */
+  function collectXAccountIcons() {
+    const out = [];
+    for (const icon of document.querySelectorAll(X_ACCOUNT_ICON_SELECTOR)) {
+      const anchor = icon.closest('a[href]');
+      if (!anchor) continue;
+      let url;
+      try {
+        url = new URL(anchor.getAttribute('href'), location.href);
+      } catch {
+        continue;
+      }
+      if (classifySocialLink(url) === 2) out.push(icon);
+    }
+    return out;
   }
 
   /* ───────── Robust Hover ───────── */
