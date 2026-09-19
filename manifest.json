@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "TrenchMate",
+  "version": "1.0.0",
+  "description": "Detects tweet icons on gmgn.ai pages, triggers Twitter preview, and expands content inline.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://gmgn.ai/*",
+    "https://fomo.family/*",
+    "https://pump.fun/*",
+    "https://*.pump.fun/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://gmgn.ai/*",
+        "https://fomo.family/*",
+        "https://pump.fun/*"
+      ],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_title": "TrenchMate",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
